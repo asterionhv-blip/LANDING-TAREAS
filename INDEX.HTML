@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor Inteligente de Tareas | Potencia tu Productividad</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #60a5fa;
+            --whatsapp: #25d366;
+            --whatsapp-dark: #128c7e;
+            --bg-light: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Global Animations --- */
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: var(--transition);
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- Navigation --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 1rem 10%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(248, 250, 252, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        /* --- Botones --- */
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--white);
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.3);
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover { transform: translateY(-3px); background-color: var(--primary-dark); box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.4); }
+
+        .btn-whatsapp {
+            background-color: var(--whatsapp);
+            color: var(--white);
+            padding: 0.8rem 1.8rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-whatsapp:hover {
+            transform: translateY(-3px) scale(1.02);
+            background-color: var(--whatsapp-dark);
+            box-shadow: 0 15px 25px -5px rgba(37, 211, 102, 0.4);
+        }
+
+        /* --- Hero Section --- */
+        .hero {
+            position: relative;
+            padding: 160px 10% 80px;
+            text-align: center;
+            overflow: hidden;
+            background: var(--bg-light);
+        }
+
+        .hero-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.2;
+            animation: float 20s infinite alternate;
+        }
+
+        .shape-1 { width: 400px; height: 400px; background: var(--accent); top: -100px; right: -50px; }
+        .shape-2 { width: 300px; height: 300px; background: var(--primary); bottom: -50px; left: -50px; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 100px) scale(1.2); }
+        }
+
+        .hero-content { position: relative; z-index: 2; max-width: 900px; margin: 0 auto; }
+
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            color: var(--text-main);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 650px;
+            margin: 0 auto 2.5rem;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* --- Dashboard Area --- */
+        .hero-visual { margin-top: 4rem; position: relative; z-index: 2; perspective: 1500px; }
+
+        .glass-dashboard {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 24px;
+            box-shadow: 0 50px 100px -20px rgba(0,0,0,0.12);
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            transform: rotateX(8deg);
+            transition: transform 0.6s ease;
+            text-align: left;
+        }
+
+        .dash-body { display: grid; grid-template-columns: 240px 1fr 280px; gap: 1.5rem; }
+        .dash-sidebar { background: rgba(255,255,255,0.4); border-radius: 16px; padding: 1rem; }
+        .menu-item { padding: 10px; border-radius: 8px; margin-bottom: 5px; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 10px; }
+        .menu-item.active { background: var(--white); color: var(--primary); }
+        .dash-main-content { display: flex; flex-direction: column; gap: 1.5rem; }
+        .mini-card { background: var(--white); padding: 1.2rem; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .task-list { background: var(--white); border-radius: 16px; padding: 1.2rem; flex-grow: 1; }
+        .task-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; }
+        .task-checkbox { width: 18px; height: 18px; border: 2px solid var(--accent); border-radius: 4px; margin-right: 12px; }
+        .task-checkbox.checked { background: var(--primary); border-color: var(--primary); }
+
+        /* --- Sección de Registro --- */
+        .register-section {
+            padding: 100px 10%;
+            background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+            text-align: center;
+        }
+
+        .register-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 3rem;
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(37, 99, 235, 0.1);
+        }
+
+        .register-container h2 { margin-bottom: 1rem; font-size: 2rem; color: var(--text-main); }
+        .register-container p { color: var(--text-muted); margin-bottom: 2rem; }
+
+        .form-group { text-align: left; margin-bottom: 1.5rem; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-main); }
+        .form-group input {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            font-family: inherit;
+            transition: var(--transition);
+        }
+        .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1); }
+
+        .success-msg {
+            display: none;
+            background: #dcfce7;
+            color: #166534;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+
+        /* --- Footer --- */
+        footer { padding: 4rem 10% 2rem; background: #0f172a; color: #94a3b8; text-align: center; }
+
+        @media (max-width: 992px) {
+            .dash-body { grid-template-columns: 1fr; }
+            .dash-sidebar, .dash-right-panel { display: none; }
+            .hero-btns { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            TaskFlow AI
+        </div>
+        <div class="nav-actions">
+            <!-- BOTÓN WHATSAPP NAVEGACIÓN -->
+            <a href="https://wa.me/573000000000?text=Hola,%20quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20Gestor%20Inteligente%20de%20Tareas" target="_blank" class="btn-whatsapp" style="padding: 0.5rem 1.2rem; font-size: 0.85rem;">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.659 1.432 5.631 1.433h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                WhatsApp
+            </a>
+            <a href="#registro" class="btn-primary" style="padding: 0.5rem 1.2rem; font-size: 0.85rem;">Registro</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="hero-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+        </div>
+        
+        <div class="hero-content">
+            <h1 class="reveal">Organiza tu día.<br>Potencia tu productividad.</h1>
+            <p class="reveal">El gestor inteligente que utiliza IA para priorizar tus tareas y darte el control total de tu tiempo.</p>
+            <div class="hero-btns reveal">
+                <a href="#registro" class="btn-primary">Empieza Gratis</a>
+                <!-- BOTÓN WHATSAPP HERO -->
+                <a href="https://wa.me/573000000000?text=Hola,%20quiero%20m%C3%A1s%20informaci%C3%B3n%20sobre%20el%20Gestor%20Inteligente%20de%20Tareas" target="_blank" class="btn-whatsapp">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.659 1.432 5.631 1.433h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                    Unirme por WhatsApp
+                </a>
+            </div>
+        </div>
+
+        <div class="hero-visual reveal">
+            <div class="glass-dashboard">
+                <div class="dash-body">
+                    <div class="dash-sidebar">
+                        <div class="menu-item active">🏠 Dashboard</div>
+                        <div class="menu-item">📅 Calendario</div>
+                    </div>
+                    <div class="dash-main-content">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="mini-card"><h4>Completadas</h4><div style="font-size: 1.5rem; font-weight: 800;">24</div></div>
+                            <div class="mini-card"><h4>Tiempo</h4><div style="font-size: 1.5rem; font-weight: 800;">3.5h</div></div>
+                        </div>
+                        <div class="task-list">
+                            <div class="task-item"><div class="task-checkbox checked"></div><span>Revisión de diseño UI/UX</span></div>
+                            <div class="task-item"><div class="task-checkbox"></div><span>Preparar reporte mensual</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- NUEVA SECCIÓN: FORMULARIO DE REGISTRO -->
+    <section class="register-section" id="registro">
+        <div class="register-container reveal">
+            <h2>Regístrate para acceder primero</h2>
+            <p>Sé de los primeros en experimentar la revolución de la productividad. Sin tarjetas, sin compromisos.</p>
+            
+            <!-- COMENTARIO: Para que el formulario funcione de verdad, crea una cuenta en Formspree.io 
+                 y reemplaza "TU_ID_AQUÍ" por el ID que te den -->
+            <form id="registrationForm" action="https://formspree.io/f/TU_ID_AQUÍ" method="POST">
+                <div class="form-group">
+                    <label for="name">Nombre completo</label>
+                    <input type="text" id="name" name="name" placeholder="Ej. Juan Pérez" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Correo electrónico</label>
+                    <input type="email" id="email" name="email" placeholder="juan@ejemplo.com" required>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 1.2rem;">Registrarme ahora</button>
+            </form>
+            <div id="successMessage" class="success-msg">
+                🎉 ¡Registro exitoso! Te contactaremos pronto.
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; <span id="year"></span> TaskFlow AI. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Observer para animaciones
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+        // Validación y envío del formulario
+        const regForm = document.getElementById('registrationForm');
+        const successMsg = document.getElementById('successMessage');
+
+        regForm.addEventListener('submit', function(e) {
+            // Nota: Aquí prevenimos el envío real para mostrar la UI de éxito. 
+            // Si conectas Formspree, puedes quitar el e.preventDefault() o usar fetch.
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+
+            if(name.length > 2 && email.includes('@')) {
+                // Simulación de envío exitoso
+                regForm.style.opacity = '0.3';
+                regForm.style.pointerEvents = 'none';
+                successMsg.style.display = 'block';
+                
+                // Si deseas que realmente se envíe a Formspree conservando la animación:
+                /*
+                fetch(regForm.action, {
+                    method: 'POST',
+                    body: new FormData(regForm),
+                    headers: { 'Accept': 'application/json' }
+                }).then(response => {
+                    if (response.ok) {
+                        regForm.reset();
+                    }
+                });
+                */
+            }
+        });
+
+        // Efecto parallax suave para el dashboard
+        window.addEventListener('scroll', () => {
+            const scroll = window.pageYOffset;
+            const dash = document.querySelector('.glass-dashboard');
+            if (dash) {
+                dash.style.transform = `rotateX(${Math.max(8 - scroll * 0.02, 0)}deg) translateY(${scroll * 0.03}px)`;
+            }
+        });
+    </script>
+</body>
+</html>
