@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prototipo — Sistema Idiomas EAFIT</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#F0F4F8;min-height:100vh}
+
+/* ── NAV ─────────────────────────────────────── */
+.nav{background:#1F3864;padding:0;display:flex;align-items:stretch;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.nav-brand{padding:14px 20px;color:#fff;font-size:14px;font-weight:600;border-right:1px solid rgba(255,255,255,0.1);white-space:nowrap}
+.nav-brand span{color:#F4A623}
+.nav-screens{display:flex;overflow-x:auto;flex:1}
+.nav-screens::-webkit-scrollbar{height:3px}
+.nav-screens::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.3)}
+.nav-btn{padding:0 14px;color:rgba(255,255,255,0.6);font-size:12px;cursor:pointer;white-space:nowrap;border:none;background:none;border-bottom:3px solid transparent;height:48px;display:flex;align-items:center;gap:6px;transition:all .15s}
+.nav-btn:hover{color:#fff;background:rgba(255,255,255,0.05)}
+.nav-btn.active{color:#fff;border-bottom-color:#F4A623}
+.nav-btn .role-dot{width:6px;height:6px;border-radius:50%}
+.docente-dot{background:#2E75B6}
+.admin-dot{background:#F4A623}
+.nav-divider{width:1px;background:rgba(255,255,255,0.15);margin:10px 4px}
+
+/* ── LAYOUT ──────────────────────────────────── */
+.page{display:none;padding:24px;min-height:calc(100vh - 48px)}
+.page.active{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap}
+.phone-col{flex-shrink:0}
+.info-col{flex:1;min-width:280px;max-width:480px}
+
+/* ── PHONE FRAME ─────────────────────────────── */
+.phone{width:375px;background:#fff;border-radius:40px;border:3px solid #1F3864;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(31,56,100,0.2)}
+.statusbar{background:#1F3864;height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 20px}
+.statusbar span{color:#fff;font-size:12px;font-weight:500}
+.topbar{background:#1F3864;padding:10px 20px 16px}
+.tb-row{display:flex;align-items:center;gap:12px}
+.back-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;flex-shrink:0}
+.tb-title{color:#fff;font-size:16px;font-weight:500}
+.tb-sub{color:#BDD7EE;font-size:11px;margin-top:2px}
+.avatar{width:34px;height:34px;border-radius:50%;background:#2E75B6;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;flex-shrink:0}
+
+/* ── COMMON ──────────────────────────────────── */
+.content{padding:18px 20px;flex:1}
+.section-lbl{font-size:11px;font-weight:600;color:#8A9BB0;letter-spacing:.5px;margin-bottom:10px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;color:#666;margin-bottom:5px;font-weight:500}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;color:#1A2840;background:#fff;outline:none}
+.field input:focus{border-color:#2E75B6;box-shadow:0 0 0 3px #E6F1FB}
+.btn-primary{width:100%;padding:14px;background:#1F3864;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:500;cursor:pointer;margin-bottom:8px}
+.btn-primary:hover{background:#2E75B6}
+.btn-secondary{width:100%;padding:12px;background:none;color:#666;border:1px solid #D8E2EE;border-radius:10px;font-size:14px;cursor:pointer}
+
+/* ── BADGES ──────────────────────────────────── */
+.badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:999px;font-weight:500}
+.badge-disp{background:#EAF3DE;color:#27500A}
+.badge-prest{background:#FAEEDA;color:#633806}
+.badge-dan{background:#FCEBEB;color:#791F1F}
+.badge-activa{background:#EAF3DE;color:#27500A}
+.badge-cancel{background:#FCEBEB;color:#791F1F}
+.badge-comp{background:#E6F1FB;color:#0C447C}
+.badge-nopres{background:#FAEEDA;color:#633806}
+
+/* ── BOTTOMNAV ───────────────────────────────── */
+.bottomnav{background:#fff;border-top:1px solid #E8EEF5;display:flex;padding:8px 0 16px}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;background:none;border:none}
+.bnav-item span{font-size:10px;color:#8A9BB0}
+.bnav-item.on span{color:#1F3864;font-weight:600}
+.bnav-item svg{stroke:#8A9BB0}
+.bnav-item.on svg{stroke:#1F3864}
+
+/* ── INFO PANEL ──────────────────────────────── */
+.info-panel{background:#fff;border-radius:16px;border:1px solid #E8EEF5;overflow:hidden}
+.info-header{background:#1F3864;padding:16px 20px;display:flex;align-items:center;gap:12px}
+.info-header-icon{width:36px;height:36px;background:rgba(255,255,255,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.info-title{color:#fff;font-size:15px;font-weight:600}
+.info-sub{color:#BDD7EE;font-size:12px;margin-top:1px}
+.info-body{padding:20px}
+.info-section{margin-bottom:18px}
+.info-section:last-child{margin-bottom:0}
+.info-section-title{font-size:12px;font-weight:600;color:#1F3864;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.info-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.tag{display:inline-block;font-size:11px;padding:3px 10px;border-radius:999px;font-weight:500}
+.tag-blue{background:#E6F1FB;color:#0C447C}
+.tag-green{background:#EAF3DE;color:#27500A}
+.tag-amber{background:#FAEEDA;color:#633806}
+.tag-red{background:#FCEBEB;color:#791F1F}
+.info-text{font-size:13px;color:#555;line-height:1.6}
+.code-block{background:#F4F7FB;border-radius:8px;padding:10px 12px;font-family:monospace;font-size:11px;color:#1A2840;margin:6px 0;line-height:1.5;border-left:3px solid #2E75B6}
+.flow-steps{list-style:none;counter-reset:step}
+.flow-steps li{counter-increment:step;display:flex;gap:10px;margin-bottom:8px;font-size:13px;color:#444;line-height:1.5}
+.flow-steps li::before{content:counter(step);background:#1F3864;color:#fff;font-size:11px;font-weight:600;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.automation-box{background:#FFF8E7;border:1px solid #EF9F27;border-radius:8px;padding:10px 12px;font-size:12px;color:#633806;line-height:1.6}
+.automation-box strong{color:#412402}
+.rule-box{background:#F0F7FF;border:1px solid #B5D4F4;border-radius:8px;padding:10px 12px;font-size:12px;color:#0C447C;line-height:1.6;margin-bottom:8px}
+
+/* ── SPECIFIC COMPONENTS ─────────────────────── */
+.search-wrap{padding:12px 16px 8px;background:#fff}
+.search-box{display:flex;align-items:center;gap:8px;background:#F4F7FB;border:1px solid #E0E8F0;border-radius:10px;padding:9px 12px}
+.search-box input{border:none;background:none;font-size:13px;flex:1;outline:none;color:#1A2840}
+.chips{display:flex;gap:6px;padding:0 16px 10px;overflow-x:auto;background:#fff}
+.chips::-webkit-scrollbar{display:none}
+.chip{padding:5px 14px;border-radius:999px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;border:1px solid #D8E2EE;color:#666;background:#fff}
+.chip.on{background:#1F3864;color:#fff;border-color:#1F3864}
+.count-row{padding:4px 16px 8px;font-size:12px;color:#8A9BB0;background:#fff;border-bottom:1px solid #E8EEF5}
+.mat-list{overflow-y:auto;max-height:320px}
+.mat-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #F0F4F8;cursor:pointer}
+.mat-item:hover{background:#F8FAFC}
+.mat-item:last-child{border-bottom:none}
+.item-name{font-size:14px;font-weight:500;color:#1A2840}
+.item-meta{font-size:12px;color:#8A9BB0;margin-top:2px}
+
+.stat-hero{background:#F4F7FB;border-radius:12px;padding:18px;margin-bottom:14px;text-align:center}
+.hero-logo{width:56px;height:56px;background:#1F3864;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.mat-name-hero{font-size:19px;font-weight:600;color:#1A2840;margin-bottom:4px}
+.mat-cat-hero{font-size:13px;color:#8A9BB0}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-card{background:#F4F7FB;border-radius:10px;padding:14px}
+.stat-label{font-size:11px;color:#8A9BB0;margin-bottom:4px}
+.stat-val{font-size:24px;font-weight:600;color:#1A2840}
+
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:16px}
+.cal-head{font-size:10px;color:#8A9BB0;text-align:center;padding:3px 0}
+.cal-day{height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;color:#8A9BB0}
+.cal-day.avail{background:#EAF3DE;color:#27500A;font-weight:500}
+.cal-day.sel{background:#1F3864;color:#fff;font-weight:600}
+.cal-day.past{color:#CCC;cursor:default}
+.cal-day:hover:not(.past){background:#E6F1FB}
+.cal-day.sel:hover{background:#1F3864}
+
+.block-item{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:10px;border:1px solid #E0E8F0;margin-bottom:8px;cursor:pointer}
+.block-item.sel{border:2px solid #1F3864;background:#E6F1FB}
+.block-item.taken{background:#F4F7FB;cursor:not-allowed;opacity:.5}
+.block-time{font-size:13px;font-weight:500;color:#1A2840}
+.block-dur{font-size:11px;color:#8A9BB0}
+
+.summary-card{background:#F4F7FB;border-radius:12px;padding:16px;margin-bottom:14px}
+.s-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #E8EEF5;font-size:13px}
+.s-row:last-child{border-bottom:none}
+.s-label{color:#8A9BB0}
+.s-val{font-weight:500;color:#1A2840}
+.devol-box{background:#EAF3DE;border-radius:10px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+.devol-icon{width:36px;height:36px;background:#27500A;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cancel-note{font-size:12px;color:#8A9BB0;text-align:center;margin-bottom:14px;line-height:1.5}
+
+.success-icon{width:64px;height:64px;background:#EAF3DE;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:16px auto 14px}
+.res-num-box{background:#E6F1FB;border-radius:10px;padding:14px;text-align:center;margin-bottom:14px}
+.res-num-lbl{font-size:11px;color:#0C447C;margin-bottom:4px}
+.res-num-val{font-size:22px;font-weight:700;color:#0C447C;letter-spacing:2px}
+
+.reserva-item{background:#fff;border:1px solid #E8EEF5;border-radius:10px;padding:12px 14px;margin-bottom:8px}
+.res-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.res-name{font-size:13px;font-weight:500;color:#1A2840}
+.res-detail{font-size:11px;color:#8A9BB0;line-height:1.6}
+.res-num-sm{font-size:10px;color:#B0BCC8;margin-top:3px}
+.btn-cancel{font-size:11px;color:#A32D2D;background:none;border:1px solid #F09595;border-radius:999px;padding:3px 10px;cursor:pointer;margin-top:5px}
+
+.prestamo-card{background:#fff;border:1px solid #E8EEF5;border-radius:12px;padding:14px;margin-bottom:10px;overflow:hidden}
+.pc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.pc-name{font-size:14px;font-weight:500;color:#1A2840}
+.pc-meta{font-size:12px;color:#8A9BB0;margin-top:2px}
+.semaforo{width:12px;height:12px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.sf-verde{background:#639922}
+.sf-amarillo{background:#BA7517}
+.sf-rojo{background:#E24B4A;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.bar-wrap{margin-bottom:10px}
+.bar-labels{display:flex;justify-content:space-between;font-size:11px;color:#8A9BB0;margin-bottom:4px}
+.bar-track{height:6px;background:#F0F4F8;border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px}
+.bf-verde{background:#639922}
+.bf-amarillo{background:#BA7517}
+.bf-rojo{background:#E24B4A}
+.pc-footer{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #F0F4F8}
+.pc-fl{font-size:11px;color:#8A9BB0}
+.pc-fv{font-size:12px;font-weight:500;color:#1A2840}
+.badge-vencido{background:#FCEBEB;color:#791F1F;font-size:11px;padding:3px 10px;border-radius:999px;font-weight:500}
+
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.metric{background:#F4F7FB;border-radius:10px;padding:14px}
+.metric-lbl{font-size:11px;color:#8A9BB0;margin-bottom:4px}
+.metric-val{font-size:26px;font-weight:700;color:#1A2840}
+.metric-val.warn{color:#BA7517}
+.metric-val.danger{color:#E24B4A}
+.alert-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:8px;cursor:pointer}
+.ar-rojo{background:#FCEBEB;border:1px solid #F09595}
+.ar-amarillo{background:#FAEEDA;border:1px solid #EF9F27}
+.ar-verde{background:#EAF3DE;border:1px solid #97C459}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-r{background:#E24B4A}
+.dot-a{background:#BA7517}
+.dot-v{background:#639922}
+.ar-info{flex:1}
+.ar-name{font-size:13px;font-weight:500;color:#1A2840}
+.ar-meta{font-size:11px;color:#8A9BB0}
+.ar-time{font-size:12px;font-weight:600;flex-shrink:0}
+.t-r{color:#E24B4A}.t-a{color:#BA7517}.t-v{color:#639922}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.qa-btn{padding:12px;background:#fff;border:1px solid #E0E8F0;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer}
+.qa-btn:hover{background:#F4F7FB}
+.qa-label{font-size:12px;color:#555;text-align:center}
+
+.docente-suggest{background:#E6F1FB;border:1px solid #B5D4F4;border-radius:10px;padding:12px;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.ds-avatar{width:34px;height:34px;border-radius:50%;background:#185FA5;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;flex-shrink:0}
+.estado-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.estado-btn{padding:10px;border-radius:10px;border:1px solid #E0E8F0;cursor:pointer;text-align:center;font-size:12px;font-weight:500;background:#fff;color:#666}
+.eb-good{background:#EAF3DE;border-color:#97C459;color:#27500A}
+.eb-bad{background:#FCEBEB;border-color:#F09595;color:#791F1F}
+.estado3-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px}
+.e3-btn{padding:9px 4px;border-radius:10px;border:1px solid #E0E8F0;cursor:pointer;text-align:center;font-size:12px;font-weight:500;background:#fff;color:#666}
+.e3-good{background:#EAF3DE;border-color:#97C459;color:#27500A}
+.e3-inc{background:#FAEEDA;border-color:#EF9F27;color:#633806}
+.e3-dan{background:#FCEBEB;border-color:#F09595;color:#791F1F}
+.vencido-alert{background:#FCEBEB;border-radius:10px;padding:9px 12px;margin-bottom:10px;font-size:12px;color:#791F1F;display:flex;align-items:center;gap:6px}
+.devolucion-info{background:#F4F7FB;border-radius:10px;padding:12px;margin-bottom:10px}
+.dv-row{display:flex;justify-content:space-between;padding:5px 0;font-size:12px;border-bottom:1px solid #E8EEF5}
+.dv-row:last-child{border-bottom:none}
+.dv-row span:first-child{color:#8A9BB0}
+.dv-row span:last-child{font-weight:500;color:#1A2840}
+
+.alerta-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;margin-bottom:8px;cursor:pointer}
+.ai-rojo{background:#FCEBEB;border:1px solid #F09595}
+.ai-amarillo{background:#FAEEDA;border:1px solid #EF9F27}
+.ai-verde{background:#EAF3DE;border:1px solid #97C459}
+.btn-nopres{font-size:11px;background:none;border:1px solid #F09595;border-radius:999px;color:#791F1F;padding:3px 10px;cursor:pointer;margin-top:4px}
+.filter-chips{display:flex;gap:6px;margin-bottom:12px}
+
+.nopres-card{background:#F4F7FB;border-radius:12px;padding:14px;margin-bottom:10px}
+.np-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.np-name{font-size:14px;font-weight:500;color:#1A2840}
+.np-detail{font-size:12px;color:#8A9BB0;line-height:1.6}
+.btn-cerrar{width:100%;padding:11px;background:#1F3864;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;margin-top:10px}
+.timer-note{background:#F4F7FB;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#8A9BB0;line-height:1.5}
+
+.stat-4grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.s4-card{background:#F4F7FB;border-radius:10px;padding:12px}
+.s4-lbl{font-size:11px;color:#8A9BB0;margin-bottom:3px}
+.s4-val{font-size:20px;font-weight:700;color:#1A2840}
+.chart-section{margin-bottom:14px}
+.chart-lbl{font-size:11px;font-weight:600;color:#8A9BB0;letter-spacing:.4px;margin-bottom:8px}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.br-label{font-size:11px;color:#8A9BB0;width:66px;text-align:right;flex-shrink:0}
+.br-track{flex:1;height:16px;background:#EEF2F7;border-radius:4px;overflow:hidden}
+.br-fill{height:100%;border-radius:4px;background:#2E75B6}
+.br-fill-2{height:100%;border-radius:4px;background:#1D9E75}
+.br-val{font-size:11px;font-weight:600;color:#1A2840;width:24px;flex-shrink:0}
+.btn-exp{width:100%;padding:11px;background:none;border:1px solid #D8E2EE;border-radius:10px;font-size:13px;color:#666;cursor:pointer}
+.btn-exp:hover{background:#F4F7FB}
+
+/* ── TOOLTIPS ────────────────────────────────── */
+.error-msg{background:#FCEBEB;border:1px solid #F09595;border-radius:8px;padding:10px 12px;font-size:13px;color:#A32D2D;display:none;margin-bottom:10px}
+.obs-box{background:#F4F7FB;border-radius:10px;padding:12px;margin-bottom:14px}
+.obs-lbl{font-size:11px;color:#8A9BB0;margin-bottom:5px;font-weight:500}
+.obs-text{font-size:13px;color:#666;line-height:1.5}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     NAVIGATION
+══════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-brand">⬡ Idiomas <span>EAFIT</span></div>
+  <div class="nav-screens">
+    <div class="nav-divider"></div>
+    <span style="padding:0 10px;color:rgba(255,255,255,0.4);font-size:11px;display:flex;align-items:center">DOCENTE</span>
+    <button class="nav-btn active" onclick="go('p1')"><span class="role-dot docente-dot"></span>1. Login</button>
+    <button class="nav-btn" onclick="go('p2')"><span class="role-dot docente-dot"></span>2. Inventario</button>
+    <button class="nav-btn" onclick="go('p3')"><span class="role-dot docente-dot"></span>3. Detalle</button>
+    <button class="nav-btn" onclick="go('p4')"><span class="role-dot docente-dot"></span>4. Fecha/Bloque</button>
+    <button class="nav-btn" onclick="go('p5')"><span class="role-dot docente-dot"></span>5. Confirmar</button>
+    <button class="nav-btn" onclick="go('p6')"><span class="role-dot docente-dot"></span>6. Éxito</button>
+    <button class="nav-btn" onclick="go('p7')"><span class="role-dot docente-dot"></span>7. Mis Reservas</button>
+    <button class="nav-btn" onclick="go('p8')"><span class="role-dot docente-dot"></span>8. Préstamos</button>
+    <div class="nav-divider"></div>
+    <span style="padding:0 10px;color:rgba(255,255,255,0.4);font-size:11px;display:flex;align-items:center">ADMIN</span>
+    <button class="nav-btn" onclick="go('p9')"><span class="role-dot admin-dot"></span>9. Dashboard</button>
+    <button class="nav-btn" onclick="go('p10')"><span class="role-dot admin-dot"></span>10. Inventario</button>
+    <button class="nav-btn" onclick="go('p11')"><span class="role-dot admin-dot"></span>11. Retiro</button>
+    <button class="nav-btn" onclick="go('p12')"><span class="role-dot admin-dot"></span>12. Devolución</button>
+    <button class="nav-btn" onclick="go('p13')"><span class="role-dot admin-dot"></span>13. Alertas</button>
+    <button class="nav-btn" onclick="go('p14')"><span class="role-dot admin-dot"></span>14. No presentado</button>
+    <button class="nav-btn" onclick="go('p15')"><span class="role-dot admin-dot"></span>15. Reportes</button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     P1 — LOGIN
+══════════════════════════════════════════ -->
+<div class="page active" id="p1">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Idiomas EAFIT</span><span>●●●</span></div>
+      <div style="background:#1F3864;padding:40px 28px 32px;text-align:center">
+        <div style="width:56px;height:56px;background:#2E75B6;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 10h8M8 14h5"/></svg>
+        </div>
+        <div style="color:#fff;font-size:20px;font-weight:600;margin-bottom:6px">Gestión de recursos</div>
+        <div style="color:#BDD7EE;font-size:13px">Idiomas EAFIT · Ingresa con tu cuenta</div>
+      </div>
+      <div class="content">
+        <div class="error-msg" id="loginErr">Correo o contraseña incorrectos.</div>
+        <div class="field"><label>Correo institucional</label><input type="email" id="loginEmail" placeholder="nombre@eafit.edu.co" value="m.garcia@eafit.edu.co"></div>
+        <div class="field"><label>Contraseña</label><input type="password" id="loginPass" placeholder="••••••••" value="1234"></div>
+        <button class="btn-primary" onclick="doLogin()">Ingresar al sistema</button>
+        <div style="text-align:center;font-size:12px;color:#8A9BB0;margin-top:8px">¿Problemas para ingresar? Contacta a tu administrador</div>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div><div class="info-title">Pantalla 1 — Login</div><div class="info-sub">Rol: Docente</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tabla que consulta</div>
+          <div class="info-row"><span class="tag tag-blue">Usuarios</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🔍 Campos que valida</div>
+          <div class="info-row"><span class="tag tag-blue">email</span><span class="tag tag-blue">password (hash)</span><span class="tag tag-blue">activo = Si</span><span class="tag tag-blue">rol</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Flujo de autenticación</div>
+          <ol class="flow-steps">
+            <li>Docente ingresa email + contraseña</li>
+            <li>Sistema consulta tabla <strong>Usuarios</strong> en Supabase donde email coincida</li>
+            <li>Verifica que <strong>activo = Si</strong></li>
+            <li>Si <strong>rol = Docente</strong> → redirige a Inventario (P2)</li>
+            <li>Si <strong>rol = Admin</strong> → redirige a Dashboard (P9)</li>
+            <li>Si falla → muestra error sin revelar qué campo es incorrecto</li>
+          </ol>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📌 Regla de negocio</div>
+          <div class="rule-box">No hay registro propio. El Admin crea las cuentas desde el panel. El docente solo puede ingresar, nunca registrarse por su cuenta.</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 Automatización n8n</div>
+          <div class="automation-box">Ninguna en esta pantalla.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p2')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">Siguiente → Inventario</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P2 — INVENTARIO DOCENTE
+══════════════════════════════════════════ -->
+<div class="page" id="p2">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Idiomas EAFIT</span><span>●●●</span></div>
+      <div class="topbar" style="display:flex;justify-content:space-between;align-items:center">
+        <div><div class="tb-title">Inventario</div><div class="tb-sub">Hola, María García</div></div>
+        <div class="avatar">MG</div>
+      </div>
+      <div class="search-wrap">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A9BB0" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="inv-search" placeholder="Buscar material..." oninput="filterInv()">
+        </div>
+      </div>
+      <div class="chips" id="inv-chips">
+        <div class="chip on" onclick="setInvChip(this,'todos')">Todos</div>
+        <div class="chip" onclick="setInvChip(this,'juego')">Juegos</div>
+        <div class="chip" onclick="setInvChip(this,'libro')">Libros</div>
+        <div class="chip" onclick="setInvChip(this,'cocina')">Cocina</div>
+        <div class="chip" onclick="setInvChip(this,'disp')">Disponibles</div>
+      </div>
+      <div class="count-row" id="inv-count">Mostrando 8 de 194 materiales</div>
+      <div class="mat-list" id="inv-list"></div>
+      <div class="bottomnav">
+        <button class="bnav-item on" onclick="go('p2')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Inicio</span></button>
+        <button class="bnav-item" onclick="go('p7')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Reservas</span></button>
+        <button class="bnav-item" onclick="go('p8')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 10H3M21 6H3M21 14H3M21 18H3"/></svg><span>Préstamos</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <div><div class="info-title">Pantalla 2 — Inventario</div><div class="info-sub">Rol: Docente</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tabla principal</div>
+          <div class="info-row"><span class="tag tag-blue">Materiales</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🔍 Campos que muestra</div>
+          <div class="info-row"><span class="tag tag-blue">nombre</span><span class="tag tag-blue">categoria</span><span class="tag tag-blue">cant_real</span><span class="tag tag-blue">estado</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Lógica de filtros</div>
+          <div class="info-text">
+            — Buscador: filtra por <strong>nombre</strong> en tiempo real sin consulta a BD<br>
+            — Chips: filtran por <strong>categoria</strong> (Juego / Libro / Cocina)<br>
+            — Chip "Disponibles": filtra donde <strong>estado = Disponible</strong><br>
+            — Materiales Dañados aparecen en lista pero no son seleccionables para reservar
+          </div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">💾 Consulta a Supabase</div>
+          <div class="code-block">SELECT nombre, categoria, cant_real, estado<br>FROM materiales<br>ORDER BY categoria, nombre</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 Automatización n8n</div>
+          <div class="automation-box">Ninguna en esta pantalla. Solo lectura.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p1')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Login</button>
+          <button onclick="go('p3')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Detalle</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P3 — DETALLE MATERIAL
+══════════════════════════════════════════ -->
+<div class="page" id="p3">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Idiomas EAFIT</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-row"><button class="back-btn" onclick="go('p2')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div class="tb-title">Detalle del material</div></div></div>
+      <div class="content">
+        <div class="stat-hero">
+          <div class="hero-logo"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+          <div class="mat-name-hero">Taboo</div>
+          <div class="mat-cat-hero">Juego de palabras · Categoría: Juego</div>
+          <span class="badge badge-disp" style="margin-top:10px">Disponible</span>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Unidades totales</div><div class="stat-val">3</div></div>
+          <div class="stat-card"><div class="stat-label">Disponibles ahora</div><div class="stat-val" style="color:#27500A">2</div></div>
+        </div>
+        <div class="obs-box">
+          <div class="obs-lbl">Observaciones</div>
+          <div class="obs-text">1 caja nueva + 2 existencias (cajas moradas, nombre en naranja neón). Verificar piezas al retirar.</div>
+        </div>
+        <button class="btn-primary" onclick="go('p4')">Reservar este material</button>
+        <button class="btn-secondary">Ver disponibilidad en calendario</button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div><div class="info-title">Pantalla 3 — Detalle</div><div class="info-sub">Rol: Docente</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Materiales</span><span class="tag tag-blue">Reservas</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🔍 Campos</div>
+          <div class="info-row"><span class="tag tag-blue">nombre</span><span class="tag tag-blue">categoria</span><span class="tag tag-blue">cant_registrada</span><span class="tag tag-blue">cant_real</span><span class="tag tag-blue">estado</span><span class="tag tag-blue">observaciones</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Lógica</div>
+          <div class="info-text">
+            — "Disponibles ahora" = cant_real menos las reservas Activas para hoy<br>
+            — Botón "Reservar" deshabilitado si estado = Dañado o cant_real = 0<br>
+            — id_material se pasa como parámetro a la siguiente pantalla
+          </div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 Automatización n8n</div>
+          <div class="automation-box">Ninguna en esta pantalla.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p2')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Inventario</button>
+          <button onclick="go('p4')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Reservar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P4 — FECHA Y BLOQUE
+══════════════════════════════════════════ -->
+<div class="page" id="p4">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Idiomas EAFIT</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-row"><button class="back-btn" onclick="go('p3')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div><div class="tb-title">Reservar Taboo</div><div class="tb-sub">Selecciona fecha y bloque</div></div></div></div>
+      <div class="content">
+        <div class="section-lbl">ABRIL 2025</div>
+        <div class="cal-grid">
+          <div class="cal-head">L</div><div class="cal-head">M</div><div class="cal-head">X</div><div class="cal-head">J</div><div class="cal-head">V</div><div class="cal-head">S</div><div class="cal-head">D</div>
+          <div></div><div class="cal-day past">1</div><div class="cal-day past">2</div><div class="cal-day past">3</div><div class="cal-day past">4</div><div class="cal-day past">5</div><div class="cal-day past">6</div>
+          <div class="cal-day past">7</div><div class="cal-day past">8</div><div class="cal-day past">9</div><div class="cal-day past">10</div><div class="cal-day past">11</div><div class="cal-day past">12</div><div></div>
+          <div class="cal-day avail" onclick="selDay(this)">14</div><div class="cal-day avail" onclick="selDay(this)">15</div><div class="cal-day avail" onclick="selDay(this)">16</div><div class="cal-day avail" onclick="selDay(this)">17</div><div class="cal-day avail sel" onclick="selDay(this)">18</div><div class="cal-day avail" onclick="selDay(this)">19</div><div></div>
+          <div class="cal-day avail" onclick="selDay(this)">21</div><div class="cal-day avail" onclick="selDay(this)">22</div><div class="cal-day avail" onclick="selDay(this)">23</div><div class="cal-day avail" onclick="selDay(this)">24</div><div class="cal-day avail" onclick="selDay(this)">25</div><div class="cal-day avail" onclick="selDay(this)">26</div><div></div>
+        </div>
+        <div class="section-lbl">BLOQUES DISPONIBLES · VIERNES 18 ABR</div>
+        <div class="block-item taken"><div><div class="block-time">6:00 – 8:00 am</div><div class="block-dur">2 horas · Adultos</div></div><span class="badge badge-cancel">Ocupado</span></div>
+        <div class="block-item sel" onclick="selBlock(this)"><div><div class="block-time">8:00 – 10:00 am</div><div class="block-dur">2 horas · Adultos</div></div><span class="badge badge-disp">Libre</span></div>
+        <div class="block-item" onclick="selBlock(this)"><div><div class="block-time">12:00 – 2:00 pm</div><div class="block-dur">2 horas · Adultos</div></div><span class="badge badge-disp">Libre</span></div>
+        <div class="block-item" onclick="selBlock(this)"><div><div class="block-time">4:00 – 6:30 pm</div><div class="block-dur">2.5 horas · Niños y Jóvenes</div></div><span class="badge badge-prest">Especial</span></div>
+        <div class="block-item" onclick="selBlock(this)"><div><div class="block-time">6:30 – 9:00 pm</div><div class="block-dur">2 horas · Adultos</div></div><span class="badge badge-disp">Libre</span></div>
+        <br><button class="btn-primary" onclick="go('p5')">Continuar</button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <div><div class="info-title">Pantalla 4 — Fecha y bloque</div><div class="info-sub">Rol: Docente</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Bloques</span><span class="tag tag-blue">Reservas</span><span class="tag tag-blue">Materiales</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Lógica del calendario</div>
+          <div class="info-text">
+            — Domingos siempre sin disponibilidad<br>
+            — Días pasados deshabilitados<br>
+            — Verde = al menos un bloque libre para ese material ese día<br><br>
+            — Lista de bloques viene de tabla <strong>Bloques</strong> filtrada por día de semana<br>
+            — "Ocupado" = ya existe Reserva Activa para ese id_material + id_bloque + fecha<br>
+            — El bloque 4:00–6:30 pm es el único de 150 minutos (niños y jóvenes)
+          </div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📌 Regla crítica</div>
+          <div class="rule-box">Antes de pasar a confirmar, el sistema re-verifica disponibilidad porque otro docente pudo reservar entre tanto. Si hay conflicto, regresa al calendario con mensaje de error.</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 Automatización n8n</div>
+          <div class="automation-box">Ninguna aún. Se dispara en la siguiente pantalla al confirmar.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p3')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Detalle</button>
+          <button onclick="go('p5')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P5 — CONFIRMAR RESERVA
+══════════════════════════════════════════ -->
+<div class="page" id="p5">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Idiomas EAFIT</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-row"><button class="back-btn" onclick="go('p4')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div><div class="tb-title">Confirmar reserva</div><div class="tb-sub">Revisa antes de confirmar</div></div></div></div>
+      <div class="content">
+        <div class="summary-card">
+          <div class="section-lbl" style="margin-bottom:10px">RESUMEN DE TU RESERVA</div>
+          <div class="s-row"><span class="s-label">Material</span><span class="s-val">Taboo</span></div>
+          <div class="s-row"><span class="s-label">Fecha</span><span class="s-val">Viernes 18 de abril</span></div>
+          <div class="s-row"><span class="s-label">Bloque</span><span class="s-val">8:00 – 10:00 am</span></div>
+          <div class="s-row"><span class="s-label">Duración</span><span class="s-val">2 horas</span></div>
+          <div class="s-row"><span class="s-label">Docente</span><span class="s-val">María García López</span></div>
+        </div>
+        <div class="devol-box">
+          <div class="devol-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+          <div><div style="font-size:11px;color:#27500A;margin-bottom:2px">Debes devolver antes de las</div><div style="font-size:18px;font-weight:700;color:#27500A">10:00 am</div></div>
+        </div>
+        <div class="cancel-note">Puedes cancelar hasta 30 minutos antes del inicio del bloque — hasta las <strong>7:30 am</strong> del viernes.</div>
+        <button class="btn-primary" onclick="go('p6')">Confirmar reserva</button>
+        <button class="btn-secondary" onclick="go('p4')">Cambiar fecha o bloque</button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div><div class="info-title">Pantalla 5 — Confirmar</div><div class="info-sub">Rol: Docente</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Reservas</span><span class="tag tag-blue">Bloques</span><span class="tag tag-blue">Usuarios</span><span class="tag tag-blue">Materiales</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Al presionar "Confirmar"</div>
+          <ol class="flow-steps">
+            <li>Sistema verifica disponibilidad una última vez</li>
+            <li>Si hay conflicto → error, regresa a P4</li>
+            <li>Si no hay conflicto → INSERT en tabla Reservas con: id_reserva (auto), id_usuario, id_material, id_bloque, fecha_reserva = ahora(), fecha_bloque, estado = Activa, <strong>notif_confirmacion = No</strong></li>
+            <li>Navega a P6 (éxito)</li>
+          </ol>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 Automatización n8n — Email 1</div>
+          <div class="automation-box"><strong>Disparador:</strong> n8n detecta nuevo registro en tabla Reservas donde notif_confirmacion = No<br><br><strong>Acción:</strong> envía Email 1 de confirmación al docente con número de reserva, material, fecha, bloque y hora de devolución<br><br><strong>Después:</strong> marca notif_confirmacion = Si para no reenviar</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p4')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Fecha</button>
+          <button onclick="go('p6')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Éxito</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P6 — ÉXITO
+══════════════════════════════════════════ -->
+<div class="page" id="p6">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Idiomas EAFIT</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-title">Reserva confirmada</div></div>
+      <div class="content">
+        <div class="success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#27500A" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div style="text-align:center;margin-bottom:16px">
+          <div style="font-size:18px;font-weight:600;color:#1A2840;margin-bottom:4px">¡Reserva confirmada!</div>
+          <div style="font-size:13px;color:#8A9BB0">Te enviamos un email de confirmación</div>
+        </div>
+        <div class="res-num-box">
+          <div class="res-num-lbl">Número de reserva</div>
+          <div class="res-num-val">RES-0247</div>
+        </div>
+        <div class="summary-card">
+          <div class="s-row"><span class="s-label">Material</span><span class="s-val">Taboo</span></div>
+          <div class="s-row"><span class="s-label">Fecha</span><span class="s-val">Vie 18 de abril</span></div>
+          <div class="s-row"><span class="s-label">Bloque</span><span class="s-val">8:00 – 10:00 am</span></div>
+          <div class="s-row"><span class="s-label">Devolver antes de</span><span class="s-val" style="color:#27500A">10:00 am</span></div>
+        </div>
+        <button class="btn-primary" onclick="go('p2')">Volver al inventario</button>
+        <button class="btn-secondary" onclick="go('p7')">Ver mis reservas</button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <div><div class="info-title">Pantalla 6 — Éxito</div><div class="info-sub">Rol: Docente</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Qué ocurre al llegar aquí</div>
+          <div class="info-text">
+            — La reserva ya fue INSERT en tabla <strong>Reservas</strong><br>
+            — n8n ya detectó el registro y envió Email 1 al docente<br>
+            — RES-0247 es el id_reserva generado automáticamente por Supabase<br>
+            — "Devolver antes de" = hora_fin del bloque seleccionado (tabla Bloques)
+          </div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📌 Esta pantalla es READ ONLY</div>
+          <div class="rule-box">Solo confirma lo que ya ocurrió. No escribe nada nuevo en la base de datos.</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 n8n en este punto</div>
+          <div class="automation-box">Email 1 ya fue enviado. notif_confirmacion ya está en Si. El flujo de n8n terminó para esta reserva.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p5')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Confirmar</button>
+          <button onclick="go('p7')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Mis reservas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P7 — MIS RESERVAS
+══════════════════════════════════════════ -->
+<div class="page" id="p7">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Idiomas EAFIT</span><span>●●●</span></div>
+      <div class="topbar"><div style="display:flex;justify-content:space-between;align-items:center"><div class="tb-title">Mis reservas</div><div class="avatar" style="width:30px;height:30px;font-size:11px">MG</div></div></div>
+      <div class="content" style="max-height:460px;overflow-y:auto">
+        <div class="section-lbl">ACTIVAS</div>
+        <div class="reserva-item">
+          <div class="res-header"><span class="res-name">Taboo</span><span class="badge badge-activa">Activa</span></div>
+          <div class="res-detail">Vie 18 abr · 8:00 – 10:00 am · Devolver antes de las 10:00 am</div>
+          <div class="res-num-sm">RES-0247</div>
+          <button class="btn-cancel">Cancelar reserva</button>
+        </div>
+        <div class="reserva-item">
+          <div class="res-header"><span class="res-name">Guess Who?</span><span class="badge badge-activa">Activa</span></div>
+          <div class="res-detail">Lun 21 abr · 12:00 – 2:00 pm · Devolver antes de las 2:00 pm</div>
+          <div class="res-num-sm">RES-0251</div>
+          <button class="btn-cancel">Cancelar reserva</button>
+        </div>
+        <div class="section-lbl" style="margin-top:14px">HISTORIAL</div>
+        <div class="reserva-item">
+          <div class="res-header"><span class="res-name">Scrabble</span><span class="badge badge-comp">Completada</span></div>
+          <div class="res-detail">Jue 10 abr · 8:00 – 10:00 am</div>
+          <div class="res-num-sm">RES-0231</div>
+        </div>
+        <div class="reserva-item">
+          <div class="res-header"><span class="res-name">Cranium</span><span class="badge badge-cancel">Cancelada</span></div>
+          <div class="res-detail">Mar 8 abr · 4:00 – 6:30 pm</div>
+          <div class="res-num-sm">RES-0228</div>
+        </div>
+        <div class="reserva-item">
+          <div class="res-header"><span class="res-name">Pictionary</span><span class="badge badge-nopres">No presentado</span></div>
+          <div class="res-detail">Vie 4 abr · 8:00 – 10:00 am</div>
+          <div class="res-num-sm">RES-0215</div>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <button class="bnav-item" onclick="go('p2')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Inicio</span></button>
+        <button class="bnav-item on" onclick="go('p7')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Reservas</span></button>
+        <button class="bnav-item" onclick="go('p8')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 10H3M21 6H3M21 14H3M21 18H3"/></svg><span>Préstamos</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+        <div><div class="info-title">Pantalla 7 — Mis reservas</div><div class="info-sub">Rol: Docente</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tabla</div>
+          <div class="info-row"><span class="tag tag-blue">Reservas</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">💾 Consulta</div>
+          <div class="code-block">SELECT * FROM reservas<br>WHERE id_usuario = [sesión activa]<br>ORDER BY fecha_bloque DESC</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Botón cancelar</div>
+          <div class="info-text">
+            Visible solo si: fecha_bloque + hora_inicio - 30min &gt; ahora()<br><br>
+            Al cancelar: <code style="background:#F4F7FB;padding:2px 6px;border-radius:4px;font-size:11px">UPDATE reservas SET estado = 'Cancelada', fecha_cancelacion = ahora()</code>
+          </div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🏷️ Estados posibles</div>
+          <div class="info-row"><span class="tag tag-green">Activa</span><span class="tag tag-blue">Completada</span><span class="tag tag-red">Cancelada</span><span class="tag tag-amber">No presentado</span></div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p6')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Éxito</button>
+          <button onclick="go('p8')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Préstamos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P8 — MIS PRÉSTAMOS ACTIVOS
+══════════════════════════════════════════ -->
+<div class="page" id="p8">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Idiomas EAFIT</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-title">Mis préstamos activos</div><div class="tb-sub" style="margin-top:2px">Materiales que tienes en este momento</div></div>
+      <div class="content" style="max-height:440px;overflow-y:auto">
+        <div class="prestamo-card">
+          <div class="pc-top"><div><div class="pc-name">Taboo</div><div class="pc-meta">Retirado hoy 8:05 am · TRX-0089</div></div><div class="semaforo sf-verde"></div></div>
+          <div class="bar-wrap">
+            <div class="bar-labels"><span>8:05 am</span><span style="color:#27500A;font-weight:600">Devolver 10:00 am</span></div>
+            <div class="bar-track"><div class="bar-fill bf-verde" style="width:35%"></div></div>
+          </div>
+          <div class="pc-footer"><div><div class="pc-fl">Tiempo restante</div><div class="pc-fv" style="color:#27500A">1h 17min</div></div><div><div class="pc-fl">Estado al retirar</div><div class="pc-fv">Bueno</div></div></div>
+        </div>
+        <div class="prestamo-card" style="border-color:#EF9F27">
+          <div class="pc-top"><div><div class="pc-name">Scrabble</div><div class="pc-meta">Retirado hoy 8:10 am · TRX-0090</div></div><div class="semaforo sf-amarillo"></div></div>
+          <div class="bar-wrap">
+            <div class="bar-labels"><span>8:10 am</span><span style="color:#BA7517;font-weight:600">Devolver 10:00 am</span></div>
+            <div class="bar-track"><div class="bar-fill bf-amarillo" style="width:72%"></div></div>
+          </div>
+          <div class="pc-footer"><div><div class="pc-fl">Tiempo restante</div><div class="pc-fv" style="color:#BA7517">23min</div></div><div><div class="pc-fl">Estado al retirar</div><div class="pc-fv">Bueno</div></div></div>
+        </div>
+        <div class="prestamo-card" style="border-color:#E24B4A">
+          <div class="pc-top"><div><div class="pc-name">Cranium</div><div class="pc-meta">Retirado ayer 4:00 pm · TRX-0085</div></div><div class="semaforo sf-rojo"></div></div>
+          <div class="bar-wrap">
+            <div class="bar-labels"><span>4:00 pm</span><span style="color:#E24B4A;font-weight:600">Venció 6:30 pm</span></div>
+            <div class="bar-track"><div class="bar-fill bf-rojo" style="width:100%"></div></div>
+          </div>
+          <div class="pc-footer"><div><div class="pc-fl">Tiempo vencido</div><div class="pc-fv" style="color:#E24B4A">16h 30min</div></div><span class="badge-vencido">VENCIDO</span></div>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <button class="bnav-item" onclick="go('p2')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Inicio</span></button>
+        <button class="bnav-item" onclick="go('p7')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span>Reservas</span></button>
+        <button class="bnav-item on" onclick="go('p8')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 10H3M21 6H3M21 14H3M21 18H3"/></svg><span>Préstamos</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 10H3M21 6H3M21 14H3M21 18H3"/></svg></div>
+        <div><div class="info-title">Pantalla 8 — Préstamos activos</div><div class="info-sub">Rol: Docente</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Préstamos</span><span class="tag tag-blue">Bloques</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">💾 Consulta</div>
+          <div class="code-block">SELECT * FROM prestamos<br>WHERE id_usuario = [sesión]<br>AND fh_devolucion IS NULL</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🚦 Semáforo — lógica</div>
+          <div class="info-row"><span class="tag tag-green">Verde</span><span class="tag tag-amber">Amarillo</span><span class="tag tag-red">Rojo</span></div>
+          <div class="info-text" style="margin-top:8px">
+            Verde: hora_devolucion_esperada - ahora() &gt; 30 min<br>
+            Amarillo: entre 0 y 30 minutos restantes<br>
+            Rojo: hora_devolucion_esperada &lt; ahora()
+          </div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 Automatización n8n — Email 2</div>
+          <div class="automation-box"><strong>Disparador:</strong> n8n detecta préstamo donde hora_devolucion_esperada &lt; ahora() AND fh_devolucion IS NULL AND notif_vencimiento = No<br><br><strong>Acción:</strong> envía Email 2 al docente con asunto "VENCIDO — Material sin devolver"<br><br><strong>Después:</strong> marca notif_vencimiento = Si</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📌 READ ONLY para el docente</div>
+          <div class="rule-box">El docente no puede hacer nada aquí — solo ver. La devolución la registra únicamente el Admin en la pantalla 12.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p7')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Reservas</button>
+          <button onclick="go('p9')" style="flex:1;padding:10px;background:#F4A623;color:#1A2840;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">→ Panel Admin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P9 — DASHBOARD ADMIN
+══════════════════════════════════════════ -->
+<div class="page" id="p9">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Panel Admin</span><span>●●●</span></div>
+      <div class="topbar" style="display:flex;justify-content:space-between;align-items:center">
+        <div><div class="tb-title">Buen día, Luis</div><div class="tb-sub">Viernes 18 de abril · 9:41 am</div></div>
+        <div class="avatar" style="background:#F4A623;color:#1A2840">LM</div>
+      </div>
+      <div class="content" style="max-height:460px;overflow-y:auto">
+        <div class="metrics-grid">
+          <div class="metric"><div class="metric-lbl">Disponibles</div><div class="metric-val">181</div></div>
+          <div class="metric"><div class="metric-lbl">Préstamos activos</div><div class="metric-val warn">11</div></div>
+          <div class="metric"><div class="metric-lbl">Vencidos hoy</div><div class="metric-val danger">2</div></div>
+          <div class="metric"><div class="metric-lbl">Reservas hoy</div><div class="metric-val">8</div></div>
+        </div>
+        <div class="section-lbl">ALERTAS ACTIVAS</div>
+        <div class="alert-row ar-rojo" onclick="go('p13')"><div class="dot dot-r"></div><div class="ar-info"><div class="ar-name">Cranium — María García</div><div class="ar-meta">Debía devolver a las 6:30 pm</div></div><span class="ar-time t-r">+16h</span></div>
+        <div class="alert-row ar-rojo" onclick="go('p13')"><div class="dot dot-r"></div><div class="ar-info"><div class="ar-name">Pictionary — Carlos Restrepo</div><div class="ar-meta">Debía devolver a las 9:00 pm</div></div><span class="ar-time t-r">+12h</span></div>
+        <div class="alert-row ar-amarillo"><div class="dot dot-a"></div><div class="ar-info"><div class="ar-name">Scrabble — Ana Gómez</div><div class="ar-meta">Vence a las 10:00 am</div></div><span class="ar-time t-a">23min</span></div>
+        <div class="alert-row ar-verde"><div class="dot dot-v"></div><div class="ar-info"><div class="ar-name">Taboo — María García</div><div class="ar-meta">Vence a las 10:00 am</div></div><span class="ar-time t-v">1h 17m</span></div>
+        <div class="section-lbl" style="margin-top:14px">ACCIONES RÁPIDAS</div>
+        <div class="qa-grid">
+          <div class="qa-btn" onclick="go('p11')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F3864" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span class="qa-label">Registrar retiro</span></div>
+          <div class="qa-btn" onclick="go('p12')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F3864" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="qa-label">Registrar devolución</span></div>
+          <div class="qa-btn" onclick="go('p10')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F3864" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="qa-label">Inventario</span></div>
+          <div class="qa-btn" onclick="go('p15')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1F3864" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span class="qa-label">Reportes</span></div>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <button class="bnav-item on" onclick="go('p9')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>Panel</span></button>
+        <button class="bnav-item" onclick="go('p13')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span>Alertas</span></button>
+        <button class="bnav-item" onclick="go('p10')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Inventario</span></button>
+        <button class="bnav-item" onclick="go('p15')"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Reportes</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
+        <div><div class="info-title">Pantalla 9 — Dashboard Admin</div><div class="info-sub">Rol: Admin</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Materiales</span><span class="tag tag-blue">Préstamos</span><span class="tag tag-blue">Reservas</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📊 Cómo se calculan las métricas</div>
+          <div class="code-block">Disponibles: COUNT(*) FROM materiales WHERE estado='Disponible'<br>Préstamos activos: COUNT(*) FROM prestamos WHERE fh_devolucion IS NULL<br>Vencidos: COUNT(*) WHERE fh_devolucion IS NULL AND hora_dev &lt; now()<br>Reservas hoy: COUNT(*) FROM reservas WHERE fecha_bloque = today()</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Alertas</div>
+          <div class="info-text">Ordenadas por urgencia: Rojo primero, luego Amarillo, luego Verde. Actualización en tiempo real vía Supabase Realtime.</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📌 Exclusivo Admin</div>
+          <div class="rule-box">Esta pantalla solo es accesible con rol = Admin. El docente que intente acceder es redirigido automáticamente a su inventario.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p10')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Inventario Admin</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P10 — INVENTARIO ADMIN
+══════════════════════════════════════════ -->
+<div class="page" id="p10">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Panel Admin</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-row"><button class="back-btn" onclick="go('p9')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div class="tb-title">Inventario</div></div></div>
+      <div class="search-wrap"><div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8A9BB0" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><input type="text" placeholder="Buscar material..."></div></div>
+      <div class="mat-list">
+        <div class="mat-item"><div><div class="item-name">Taboo</div><div class="item-meta">Juego · 3 un. · MAT-014</div></div><span class="badge badge-disp">Disponible</span></div>
+        <div class="mat-item"><div><div class="item-name">Cranium</div><div class="item-meta">Juego · 2 un. · MAT-005</div></div><span class="badge badge-prest">Prestado</span></div>
+        <div class="mat-item"><div><div class="item-name">Licuadora Haceb</div><div class="item-meta">Cocina · 1 un. · MAT-077</div></div><span class="badge badge-dan">Dañado</span></div>
+        <div class="mat-item"><div><div class="item-name">Scrabble</div><div class="item-meta">Juego · 2 un. · MAT-023</div></div><span class="badge badge-disp">Disponible</span></div>
+        <div class="mat-item"><div><div class="item-name">Cocina Pedagógica</div><div class="item-meta">Cocina · 1 un. · MAT-076</div></div><span class="badge badge-disp">Disponible</span></div>
+        <div class="mat-item"><div><div class="item-name">Pictionary</div><div class="item-meta">Juego · 3 un. · MAT-026</div></div><span class="badge badge-prest">Prestado</span></div>
+      </div>
+      <div style="padding:14px"><button class="btn-primary">+ Agregar material</button></div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <div><div class="info-title">Pantalla 10 — Inventario Admin</div><div class="info-sub">Rol: Admin</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tabla</div>
+          <div class="info-row"><span class="tag tag-blue">Materiales</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Diferencia con el Docente</div>
+          <div class="info-text">
+            El Admin puede:<br>
+            — Editar nombre, cant_real, observaciones<br>
+            — Cambiar estado manualmente (incluyendo Dañado → Disponible tras reparación)<br>
+            — Agregar nuevos materiales (INSERT)<br><br>
+            El Docente solo puede: ver y filtrar (SELECT).
+          </div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📌 Regla de negocio</div>
+          <div class="rule-box">Cuando un material Dañado es reparado, el Admin entra aquí, lo busca y cambia estado a Disponible. No hay flujo adicional — es una operación directa de UPDATE.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p9')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Dashboard</button>
+          <button onclick="go('p11')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Retiro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P11 — REGISTRO RETIRO
+══════════════════════════════════════════ -->
+<div class="page" id="p11">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Panel Admin</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-row"><button class="back-btn" onclick="go('p9')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div><div class="tb-title">Registrar retiro</div><div class="tb-sub">Flujo 2A</div></div></div></div>
+      <div class="content">
+        <div class="field"><label>Buscar reserva o material</label><input type="text" value="RES-0247 — Taboo" readonly style="background:#F4F7FB"></div>
+        <div class="docente-suggest">
+          <div class="ds-avatar">MG</div>
+          <div>
+            <div style="font-size:11px;font-weight:500;color:#0C447C">Docente sugerido por el sistema</div>
+            <div style="font-size:14px;font-weight:600;color:#1A2840">María García López</div>
+            <div style="font-size:11px;color:#185FA5">Reserva activa: 8:00 – 10:00 am · Taboo</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Estado inicial del material al salir</label>
+          <div class="estado-btns">
+            <div class="estado-btn eb-good" id="eb1" onclick="selEb(1)">Bueno</div>
+            <div class="estado-btn" id="eb2" onclick="selEb(2)">Dañado (preexistente)</div>
+          </div>
+        </div>
+        <div class="field" id="obsRetiro" style="display:none"><label>Descripción del daño preexistente</label><input type="text" placeholder="Describe el daño..."></div>
+        <button class="btn-primary" onclick="alert('¡Retiro registrado! Material → Prestado. ID: TRX-0091')">Registrar retiro</button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+        <div><div class="info-title">Pantalla 11 — Registro retiro</div><div class="info-sub">Rol: Admin · Flujo 2A</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Préstamos</span><span class="tag tag-blue">Materiales</span><span class="tag tag-blue">Reservas</span><span class="tag tag-blue">Bloques</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Al confirmar</div>
+          <ol class="flow-steps">
+            <li>INSERT en tabla Préstamos: id_prestamo (auto), id_reserva, id_material, id_usuario, fh_retiro = ahora(), estado_ini</li>
+            <li>UPDATE materiales SET estado = 'Prestado'</li>
+            <li>hora_devolucion_esperada = hora_fin del bloque (viene de tabla Bloques)</li>
+            <li>El préstamo aparece en "Mis préstamos activos" del docente</li>
+          </ol>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📌 Regla importante</div>
+          <div class="rule-box">Si estado_ini = Dañado (preexistente): el material sale de todas formas pero queda registrado que el problema existía antes. El docente NO será responsable de ese daño al devolver.</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 Automatización n8n</div>
+          <div class="automation-box">Ninguna al registrar el retiro. n8n solo se activa después si el material no es devuelto a tiempo (Email 2).</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p10')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Inventario</button>
+          <button onclick="go('p12')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Devolución</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P12 — REGISTRO DEVOLUCIÓN
+══════════════════════════════════════════ -->
+<div class="page" id="p12">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Panel Admin</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-row"><button class="back-btn" onclick="go('p9')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div><div class="tb-title">Registrar devolución</div><div class="tb-sub">Flujo 2B</div></div></div></div>
+      <div class="content">
+        <div class="field"><label>Buscar material prestado</label><input type="text" value="Scrabble — Ana Gómez" readonly style="background:#F4F7FB"></div>
+        <div class="vencido-alert"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Vencido hace 23 minutos</div>
+        <div class="devolucion-info">
+          <div class="dv-row"><span>Material</span><span>Scrabble</span></div>
+          <div class="dv-row"><span>Docente</span><span>Ana Gómez</span></div>
+          <div class="dv-row"><span>Retirado a las</span><span>8:10 am</span></div>
+          <div class="dv-row"><span>Tiempo prestado</span><span style="color:#BA7517">2h 13min</span></div>
+          <div class="dv-row"><span>Minutos de retraso</span><span style="color:#E24B4A">23 min</span></div>
+        </div>
+        <div class="field">
+          <label>Estado al devolver</label>
+          <div class="estado3-btns">
+            <div class="e3-btn e3-good" id="e3a" onclick="selE3('a')">Bueno</div>
+            <div class="e3-btn" id="e3b" onclick="selE3('b')">Incompleto</div>
+            <div class="e3-btn" id="e3c" onclick="selE3('c')">Dañado</div>
+          </div>
+        </div>
+        <button class="btn-primary" onclick="alert('¡Devolución registrada! Material → Disponible.')">Registrar devolución</button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+        <div><div class="info-title">Pantalla 12 — Devolución</div><div class="info-sub">Rol: Admin · Flujo 2B</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Préstamos</span><span class="tag tag-blue">Materiales</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Al confirmar</div>
+          <ol class="flow-steps">
+            <li>UPDATE préstamos SET fh_devolucion = ahora(), estado_final, min_retraso = diferencia en minutos</li>
+            <li>Si Bueno o Incompleto → UPDATE materiales SET estado = 'Disponible'</li>
+            <li>Si Dañado → UPDATE materiales SET estado = 'Dañado'</li>
+            <li>Préstamo desaparece de "Mis préstamos activos" del docente</li>
+          </ol>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 Automatización n8n — Email 3</div>
+          <div class="automation-box"><strong>Disparador:</strong> n8n detecta UPDATE en Préstamos donde estado_final = 'Dañado' AND notif_dano = No<br><br><strong>Destinatarios:</strong> docente (principal) + Dirección Idiomas EAFIT (copia obligatoria)<br><br><strong>Asunto:</strong> "⚠ Material devuelto con DAÑO — [nombre material]"<br><br><strong>Después:</strong> marca notif_dano = Si</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p11')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Retiro</button>
+          <button onclick="go('p13')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Alertas</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P13 — ALERTAS PENDIENTES
+══════════════════════════════════════════ -->
+<div class="page" id="p13">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Panel Admin</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-row"><button class="back-btn" onclick="go('p9')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div class="tb-title">Alertas pendientes</div></div></div>
+      <div class="content" style="max-height:440px;overflow-y:auto">
+        <div class="filter-chips">
+          <div class="chip on">Todos</div>
+          <div class="chip">Vencidos</div>
+          <div class="chip">Por vencer</div>
+          <div class="chip">En tiempo</div>
+        </div>
+        <div class="alerta-item ai-rojo"><div class="dot dot-r"></div><div style="flex:1"><div class="ar-name">Cranium</div><div class="ar-meta">María García · TRX-0085</div><button class="btn-nopres" onclick="go('p14')">Marcar no presentado</button></div><span class="ar-time t-r">+16h</span></div>
+        <div class="alerta-item ai-rojo"><div class="dot dot-r"></div><div style="flex:1"><div class="ar-name">Pictionary</div><div class="ar-meta">Carlos Restrepo · TRX-0087</div><button class="btn-nopres" onclick="go('p14')">Marcar no presentado</button></div><span class="ar-time t-r">+12h</span></div>
+        <div class="alerta-item ai-amarillo"><div class="dot dot-a"></div><div style="flex:1"><div class="ar-name">Scrabble</div><div class="ar-meta">Ana Gómez · TRX-0090</div></div><span class="ar-time t-a">23min</span></div>
+        <div class="alerta-item ai-verde"><div class="dot dot-v"></div><div style="flex:1"><div class="ar-name">Taboo</div><div class="ar-meta">María García · TRX-0089</div></div><span class="ar-time t-v">1h 17m</span></div>
+        <div class="alerta-item ai-verde"><div class="dot dot-v"></div><div style="flex:1"><div class="ar-name">Dixit</div><div class="ar-meta">Luis Martínez · TRX-0091</div></div><span class="ar-time t-v">2h 40m</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+        <div><div class="info-title">Pantalla 13 — Alertas</div><div class="info-sub">Rol: Admin</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Préstamos</span><span class="tag tag-blue">Bloques</span><span class="tag tag-blue">Usuarios</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">💾 Consulta</div>
+          <div class="code-block">SELECT p.*, u.nombre_completo, m.nombre<br>FROM prestamos p<br>JOIN usuarios u ON p.id_usuario = u.id_usuario<br>JOIN materiales m ON p.id_material = m.id_material<br>WHERE p.fh_devolucion IS NULL<br>ORDER BY hora_devolucion_esperada ASC</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🚦 Semáforo</div>
+          <div class="info-row"><span class="tag tag-red">Rojo: vencido</span><span class="tag tag-amber">Amarillo: &lt;30min</span><span class="tag tag-green">Verde: en tiempo</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 n8n ya actuó</div>
+          <div class="automation-box">Los registros en Rojo ya recibieron el Email 2 automáticamente. El Admin los ve acá para hacer seguimiento presencial.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p12')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Devolución</button>
+          <button onclick="go('p14')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ No presentado</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P14 — NO PRESENTADO
+══════════════════════════════════════════ -->
+<div class="page" id="p14">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Panel Admin</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-row"><button class="back-btn" onclick="go('p13')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div><div class="tb-title">No se presentó</div><div class="tb-sub">Flujo 2C</div></div></div></div>
+      <div class="content">
+        <div class="timer-note">Solo disponible 15 minutos después del inicio del bloque. Esta acción es irreversible desde el sistema.</div>
+        <div class="nopres-card">
+          <div class="np-header"><span class="np-name">Guess Who?</span><span class="badge badge-nopres">Sin retiro</span></div>
+          <div class="np-detail">Docente: Luis Martínez Torres<br>Reserva: RES-0249<br>Bloque: 8:00 – 10:00 am · Hoy<br>Iniciado hace: <strong>22 minutos</strong></div>
+          <button class="btn-cerrar" onclick="alert('Reserva marcada como No presentado.\nMaterial liberado → Disponible.')">Cerrar como No presentado</button>
+        </div>
+        <div class="nopres-card" style="opacity:.5">
+          <div class="np-header"><span class="np-name">Scrabble</span><span class="badge badge-nopres">Sin retiro</span></div>
+          <div class="np-detail">Docente: Ana Gómez<br>Reserva: RES-0250<br>Bloque: 8:00 – 10:00 am · Hoy<br>Iniciado hace: <strong>8 minutos</strong></div>
+          <button class="btn-cerrar" disabled style="background:#F4F7FB;color:#8A9BB0;cursor:not-allowed">Disponible en 7 minutos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div><div class="info-title">Pantalla 14 — No presentado</div><div class="info-sub">Rol: Admin · Flujo 2C</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Reservas</span><span class="tag tag-blue">Materiales</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Condición para habilitar</div>
+          <div class="code-block">(now() - hora_inicio_bloque) >= 15 min<br>AND no existe préstamo para esa reserva</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Al confirmar</div>
+          <ol class="flow-steps">
+            <li>UPDATE reservas SET estado = 'No presentado', fecha_no_presentado = ahora()</li>
+            <li>UPDATE materiales SET estado = 'Disponible' — libera el material para otros</li>
+          </ol>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📌 Valor para el cliente</div>
+          <div class="rule-box">El reporte de "No presentado" permite identificar docentes que reservan sistemáticamente pero no se presentan. Esto afecta la disponibilidad para otros docentes y puede justificar políticas de uso.</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🤖 Automatización n8n</div>
+          <div class="automation-box">Ninguna automática. El Admin puede contactar al docente por otro medio si lo considera necesario.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5;display:flex;gap:8px">
+          <button onclick="go('p13')" style="flex:1;padding:10px;background:#F4F7FB;color:#555;border:1px solid #D8E2EE;border-radius:8px;font-size:13px;cursor:pointer">← Alertas</button>
+          <button onclick="go('p15')" style="flex:1;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">→ Reportes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     P15 — REPORTES
+══════════════════════════════════════════ -->
+<div class="page" id="p15">
+  <div class="phone-col">
+    <div class="phone">
+      <div class="statusbar"><span>9:41</span><span>Panel Admin</span><span>●●●</span></div>
+      <div class="topbar"><div class="tb-row"><button class="back-btn" onclick="go('p9')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button><div class="tb-title">Reportes</div></div></div>
+      <div class="content" style="max-height:440px;overflow-y:auto">
+        <div class="stat-4grid">
+          <div class="s4-card"><div class="s4-lbl">Préstamos este mes</div><div class="s4-val">247</div></div>
+          <div class="s4-card"><div class="s4-lbl">Tasa de retraso</div><div class="s4-val" style="color:#BA7517">18%</div></div>
+          <div class="s4-card"><div class="s4-lbl">Materiales dañados</div><div class="s4-val" style="color:#E24B4A">7</div></div>
+          <div class="s4-card"><div class="s4-lbl">No presentados</div><div class="s4-val">12</div></div>
+        </div>
+        <div class="chart-section">
+          <div class="chart-lbl">USO POR MATERIAL — Este mes</div>
+          <div class="bar-row"><span class="br-label">Taboo</span><div class="br-track"><div class="br-fill" style="width:88%"></div></div><span class="br-val">44</span></div>
+          <div class="bar-row"><span class="br-label">Scrabble</span><div class="br-track"><div class="br-fill" style="width:72%"></div></div><span class="br-val">36</span></div>
+          <div class="bar-row"><span class="br-label">Cranium</span><div class="br-track"><div class="br-fill" style="width:60%"></div></div><span class="br-val">30</span></div>
+          <div class="bar-row"><span class="br-label">Pictionary</span><div class="br-track"><div class="br-fill" style="width:48%"></div></div><span class="br-val">24</span></div>
+          <div class="bar-row"><span class="br-label">Guess Who?</span><div class="br-track"><div class="br-fill" style="width:36%"></div></div><span class="br-val">18</span></div>
+        </div>
+        <div class="chart-section">
+          <div class="chart-lbl">USO POR DOCENTE — Este mes</div>
+          <div class="bar-row"><span class="br-label">M. García</span><div class="br-track"><div class="br-fill br-fill-2" style="width:80%"></div></div><span class="br-val">28</span></div>
+          <div class="bar-row"><span class="br-label">C. Restrepo</span><div class="br-track"><div class="br-fill br-fill-2" style="width:62%"></div></div><span class="br-val">22</span></div>
+          <div class="bar-row"><span class="br-label">A. Gómez</span><div class="br-track"><div class="br-fill br-fill-2" style="width:44%"></div></div><span class="br-val">15</span></div>
+          <div class="bar-row"><span class="br-label">L. Martínez</span><div class="br-track"><div class="br-fill br-fill-2" style="width:30%"></div></div><span class="br-val">11</span></div>
+        </div>
+        <button class="btn-exp" onclick="alert('Exportando datos a CSV...')">Exportar datos CSV</button>
+      </div>
+    </div>
+  </div>
+  <div class="info-col">
+    <div class="info-panel">
+      <div class="info-header">
+        <div class="info-header-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+        <div><div class="info-title">Pantalla 15 — Reportes</div><div class="info-sub">Rol: Admin</div></div>
+      </div>
+      <div class="info-body">
+        <div class="info-section">
+          <div class="info-section-title">📋 Tablas</div>
+          <div class="info-row"><span class="tag tag-blue">Préstamos</span><span class="tag tag-blue">Materiales</span><span class="tag tag-blue">Reservas</span><span class="tag tag-blue">Usuarios</span></div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">📊 Los 4 reportes del MVP</div>
+          <div class="code-block">Reporte 1 (uso por docente):<br>COUNT(*) FROM prestamos GROUP BY id_usuario<br><br>Reporte 2 (uso por material):<br>COUNT(*) FROM prestamos GROUP BY id_material<br><br>Reporte 3 (retrasos):<br>WHERE min_retraso > 0 ORDER BY min_retraso DESC<br><br>Reporte 4 (dañados):<br>WHERE estado = 'Dañado'</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">⚡ Exportar CSV</div>
+          <div class="info-text">Genera archivo descargable vía Supabase Edge Function. Permite filtrar por período (semana / mes / año).</div>
+        </div>
+        <div class="info-section">
+          <div class="info-section-title">🎯 Para qué sirven estos datos</div>
+          <div class="rule-box">Decisiones de compra: materiales con alta demanda y baja disponibilidad. Gestión de docentes: quiénes devuelven tarde consistentemente. Mantenimiento: materiales que se dañan frecuentemente.</div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #E8EEF5">
+          <div style="background:#EAF3DE;border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:14px;font-weight:600;color:#27500A;margin-bottom:4px">¡Prototipo completo!</div>
+            <div style="font-size:12px;color:#3B6D11">15 pantallas · 2 roles · Sistema completo<br>Idiomas EAFIT · Fabio Andrés</div>
+          </div>
+        </div>
+        <div style="margin-top:12px">
+          <button onclick="go('p1')" style="width:100%;padding:10px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer">← Volver al inicio (Login)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MAT_DATA=[
+  {n:"Guess Who?",cat:"juego",u:6,est:"Disponible"},
+  {n:"Taboo",cat:"juego",u:3,est:"Disponible"},
+  {n:"Cranium",cat:"juego",u:2,est:"Disponible"},
+  {n:"Pictionary",cat:"juego",u:3,est:"Disponible"},
+  {n:"Scrabble",cat:"juego",u:2,est:"Disponible"},
+  {n:"Dixit",cat:"juego",u:1,est:"Disponible"},
+  {n:"Secret Hitler",cat:"juego",u:1,est:"Disponible"},
+  {n:"Twister",cat:"juego",u:2,est:"Disponible"},
+  {n:"Blurt!",cat:"juego",u:2,est:"Disponible"},
+  {n:"Big Boggle",cat:"juego",u:2,est:"Disponible"},
+  {n:"Tablas para picar",cat:"cocina",u:3,est:"Disponible"},
+  {n:"Licuadora Haceb",cat:"cocina",u:1,est:"Danado"},
+  {n:"Cocina Pedagógica",cat:"cocina",u:1,est:"Disponible"},
+  {n:"Microondas Haceb",cat:"cocina",u:1,est:"Disponible"},
+  {n:"Air Fryer Vexon",cat:"cocina",u:1,est:"Disponible"},
+  {n:"Oliver Twist",cat:"libro",u:1,est:"Disponible"},
+  {n:"Peter Pan",cat:"libro",u:1,est:"Disponible"},
+  {n:"Mary Poppins",cat:"libro",u:1,est:"Disponible"},
+  {n:"Wizard of Oz",cat:"libro",u:1,est:"Disponible"},
+];
+let invChip="todos";
+
+function go(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const btns=document.querySelectorAll('.nav-btn');
+  btns.forEach(b=>{if(b.getAttribute('onclick').includes("'"+id+"'")){b.classList.add('active')}});
+  window.scrollTo(0,0);
+  if(id==='p2')filterInv();
+}
+
+function setInvChip(el,val){
+  document.querySelectorAll('#inv-chips .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  invChip=val;
+  filterInv();
+}
+
+function filterInv(){
+  const q=(document.getElementById('inv-search')||{}).value||'';
+  const ql=q.toLowerCase();
+  let res=MAT_DATA.filter(m=>{
+    const mq=!ql||m.n.toLowerCase().includes(ql);
+    const mc=invChip==='todos'?true:invChip==='disp'?m.est==='Disponible':m.cat===invChip;
+    return mq&&mc;
+  });
+  const shown=res.slice(0,8);
+  const cnt=document.getElementById('inv-count');
+  if(cnt)cnt.textContent=res.length===0?'Sin resultados':`Mostrando ${shown.length} de ${res.length} materiales`;
+  const list=document.getElementById('inv-list');
+  if(!list)return;
+  if(!res.length){list.innerHTML='<div style="padding:32px 16px;text-align:center;font-size:13px;color:#8A9BB0">No se encontró ningún material</div>';return;}
+  list.innerHTML=shown.map(m=>{
+    const bc=m.est==='Disponible'?'badge-disp':m.est==='Danado'?'badge-dan':'badge-prest';
+    const cl=m.cat==='juego'?'Juego':m.cat==='libro'?'Libro':'Cocina';
+    return`<div class="mat-item" onclick="go('p3')"><div><div class="item-name">${m.n}</div><div class="item-meta">${cl} · ${m.u} unidad${m.u!==1?'es':''}</div></div><span class="badge ${bc}">${m.est}</span></div>`;
+  }).join('');
+}
+
+function doLogin(){
+  const e=document.getElementById('loginEmail').value;
+  const p=document.getElementById('loginPass').value;
+  const err=document.getElementById('loginErr');
+  if(e.includes('@eafit.edu.co')&&p.length>=4){err.style.display='none';go('p2');}
+  else{err.style.display='block';}
+}
+
+function selDay(el){
+  document.querySelectorAll('.cal-day.sel').forEach(d=>d.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function selBlock(el){
+  document.querySelectorAll('.block-item:not(.taken)').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function selEb(n){
+  document.getElementById('eb1').className='estado-btn'+(n===1?' eb-good':'');
+  document.getElementById('eb2').className='estado-btn'+(n===2?' eb-bad':'');
+  document.getElementById('obsRetiro').style.display=n===2?'block':'none';
+}
+
+function selE3(v){
+  document.getElementById('e3a').className='e3-btn'+(v==='a'?' e3-good':'');
+  document.getElementById('e3b').className='e3-btn'+(v==='b'?' e3-inc':'');
+  document.getElementById('e3c').className='e3-btn'+(v==='c'?' e3-dan':'');
+}
+
+filterInv();
+</script>
+</body>
+</html>
